@@ -49,3 +49,9 @@ Bu proje MIT lisansı altında lisanslanmıştır - detaylar için [LICENSE](LIC
 ## İletişim
 
 Araz Umut - [@arazumut](https://github.com/arazumut)
+
+<img width="1136" height="2168" alt="Ekran Resmi 2025-08-17 13 14 06" src="https://github.com/user-attachments/assets/15e627a0-5c5c-4e1f-b602-ae2a978fc2e1" />
+<img width="1136" height="2168" alt="Ekran Resmi 2025-08-17 13 26 44" src="https://github.com/user-attachments/assets/89e532b2-9b2a-4e33-aba3-77a0aa48d542" />
+<img width="1136" height="2168" alt="Ekran Resmi 2025-08-17 13 28 53" src="https://github.com/user-attachments/assets/c8c95793-5421-491d-ac05-f792962bfd4a" />
+
+
