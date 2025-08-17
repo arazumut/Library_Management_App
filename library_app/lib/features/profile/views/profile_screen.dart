@@ -1,0 +1,525 @@
+import 'package:flutter/material.dart';
+import 'package:library_app/core/theme/app_colors.dart';
+import 'package:library_app/core/theme/app_text_styles.dart';
+
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({Key? key}) : super(key: key);
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // Dummy user data
+  final Map<String, dynamic> _userData = {
+    'name': 'John Doe',
+    'email': 'john.doe@example.com',
+    'memberSince': '2023-06-15',
+    'membershipType': 'Gold',
+    'membershipExpiry': '2024-06-15',
+    'avatarUrl': '',
+    'stats': {
+      'totalBooks': 24,
+      'currentlyBorrowing': 2,
+      'readingStreak': 15,
+      'overdueBooks': 0,
+      'favoriteGenre': 'Science Fiction',
+    },
+    'preferences': {
+      'notifications': true,
+      'darkMode': false,
+      'language': 'English',
+    }
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          // App Bar
+          SliverAppBar(
+            expandedHeight: 200.0,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary,
+                      AppColors.secondary,
+                    ],
+                  ),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40.0),
+                      // Profile Avatar
+                      CircleAvatar(
+                        radius: 40.0,
+                        backgroundColor: Colors.white,
+                        backgroundImage: _userData['avatarUrl'].isNotEmpty
+                            ? NetworkImage(_userData['avatarUrl'])
+                            : null,
+                        child: _userData['avatarUrl'].isEmpty
+                            ? Text(
+                                _getInitials(_userData['name']),
+                                style: AppTextStyles.headline3.copyWith(
+                                  color: AppColors.primary,
+                                ),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(height: 12.0),
+                      // Name
+                      Text(
+                        _userData['name'],
+                        style: AppTextStyles.headline4.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      // Membership
+                      Container(
+                        margin: const EdgeInsets.only(top: 4.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 4.0,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        child: Text(
+                          '${_userData['membershipType']} Member',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                tooltip: 'Edit Profile',
+                onPressed: () {
+                  // Navigate to edit profile
+                },
+              ),
+            ],
+          ),
+          
+          // Profile Content
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Reading stats
+                  _buildStatsSection(),
+                  
+                  const SizedBox(height: 24.0),
+                  
+                  // Account info
+                  _buildSectionHeader('Account Information'),
+                  _buildInfoCard([
+                    _buildInfoRow('Email', _userData['email'], Icons.email),
+                    const Divider(height: 24.0),
+                    _buildInfoRow('Member Since', _formatDate(_userData['memberSince']), Icons.calendar_today),
+                    const Divider(height: 24.0),
+                    _buildInfoRow('Membership Expires', _formatDate(_userData['membershipExpiry']), Icons.timer),
+                  ]),
+                  
+                  const SizedBox(height: 24.0),
+                  
+                  // Preferences
+                  _buildSectionHeader('Preferences'),
+                  _buildPreferencesCard(),
+                  
+                  const SizedBox(height: 24.0),
+                  
+                  // Actions
+                  _buildSectionHeader('Actions'),
+                  _buildActionsCard(),
+                  
+                  const SizedBox(height: 24.0),
+                  
+                  // Logout
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // Logout functionality
+                      },
+                      icon: const Icon(Icons.logout, color: AppColors.error),
+                      label: Text(
+                        'Log Out',
+                        style: AppTextStyles.buttonMedium.copyWith(
+                          color: AppColors.error,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        side: const BorderSide(color: AppColors.error),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16.0),
+                  
+                  // App version
+                  Center(
+                    child: Text(
+                      'App Version 1.0.0',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 8.0),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildStatsSection() {
+    final stats = _userData['stats'];
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Reading Statistics',
+              style: AppTextStyles.headline4,
+            ),
+            const SizedBox(height: 16.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatItem(
+                  stats['totalBooks'].toString(),
+                  'Books Read',
+                  Icons.book,
+                  AppColors.primary,
+                ),
+                _buildStatItem(
+                  stats['currentlyBorrowing'].toString(),
+                  'Borrowing',
+                  Icons.book_online,
+                  AppColors.secondary,
+                ),
+                _buildStatItem(
+                  '${stats['readingStreak']} days',
+                  'Streak',
+                  Icons.local_fire_department,
+                  Colors.orange,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16.0),
+            const Divider(),
+            const SizedBox(height: 16.0),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Favorite Genre',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4.0),
+                      Text(
+                        stats['favoriteGenre'],
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Overdue Books',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4.0),
+                      Text(
+                        stats['overdueBooks'].toString(),
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: stats['overdueBooks'] > 0 ? AppColors.error : AppColors.success,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildStatItem(String value, String label, IconData icon, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12.0),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: color,
+            size: 28.0,
+          ),
+        ),
+        const SizedBox(height: 8.0),
+        Text(
+          value,
+          style: AppTextStyles.bodyLarge.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4.0),
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        title,
+        style: AppTextStyles.headline4,
+      ),
+    );
+  }
+  
+  Widget _buildInfoCard(List<Widget> children) {
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: children,
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildInfoRow(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 20.0,
+          color: AppColors.textSecondary,
+        ),
+        const SizedBox(width: 12.0),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 2.0),
+            Text(
+              value,
+              style: AppTextStyles.bodyMedium,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildPreferencesCard() {
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: Column(
+        children: [
+          SwitchListTile(
+            title: const Text('Push Notifications'),
+            subtitle: const Text('Get notified about due dates and updates'),
+            value: _userData['preferences']['notifications'],
+            activeColor: AppColors.primary,
+            onChanged: (bool value) {
+              setState(() {
+                _userData['preferences']['notifications'] = value;
+              });
+            },
+          ),
+          const Divider(height: 0),
+          SwitchListTile(
+            title: const Text('Dark Mode'),
+            subtitle: const Text('Toggle between light and dark theme'),
+            value: _userData['preferences']['darkMode'],
+            activeColor: AppColors.primary,
+            onChanged: (bool value) {
+              setState(() {
+                _userData['preferences']['darkMode'] = value;
+              });
+            },
+          ),
+          const Divider(height: 0),
+          ListTile(
+            title: const Text('Language'),
+            subtitle: Text(_userData['preferences']['language']),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16.0),
+            onTap: () {
+              // Show language selection
+            },
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildActionsCard() {
+    final List<Map<String, dynamic>> actions = [
+      {
+        'title': 'My Saved Books',
+        'icon': Icons.bookmark,
+        'color': AppColors.primary,
+      },
+      {
+        'title': 'Reading History',
+        'icon': Icons.history,
+        'color': AppColors.secondary,
+      },
+      {
+        'title': 'Payment Methods',
+        'icon': Icons.payment,
+        'color': Colors.green,
+      },
+      {
+        'title': 'Help & Support',
+        'icon': Icons.help_outline,
+        'color': Colors.orange,
+      },
+      {
+        'title': 'Privacy & Terms',
+        'icon': Icons.privacy_tip_outlined,
+        'color': Colors.purple,
+      },
+    ];
+    
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: actions.length,
+        separatorBuilder: (context, index) => const Divider(height: 0),
+        itemBuilder: (context, index) {
+          final action = actions[index];
+          
+          return ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                color: action['color'].withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Icon(
+                action['icon'],
+                color: action['color'],
+                size: 24.0,
+              ),
+            ),
+            title: Text(action['title']),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16.0),
+            onTap: () {
+              // Navigate to respective screens
+            },
+          );
+        },
+      ),
+    );
+  }
+  
+  String _getInitials(String name) {
+    List<String> nameParts = name.split(' ');
+    String initials = '';
+    if (nameParts.isNotEmpty) {
+      initials += nameParts[0][0];
+      if (nameParts.length > 1) {
+        initials += nameParts[1][0];
+      }
+    }
+    return initials.toUpperCase();
+  }
+  
+  String _formatDate(String date) {
+    try {
+      final parsedDate = DateTime.parse(date);
+      final month = _getMonthName(parsedDate.month);
+      return '${month} ${parsedDate.day}, ${parsedDate.year}';
+    } catch (e) {
+      return date;
+    }
+  }
+  
+  String _getMonthName(int month) {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June', 
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return months[month - 1];
+  }
+}
