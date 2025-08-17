@@ -3,6 +3,7 @@ import 'package:library_app/core/theme/app_colors.dart';
 import 'package:library_app/core/theme/app_text_styles.dart';
 import 'package:library_app/core/utils/validation_utils.dart';
 import 'package:library_app/core/localization/app_localizations.dart';
+import 'package:library_app/features/books/services/book_service.dart';
 import 'package:library_app/shared/widgets/custom_text_field.dart';
 import 'package:library_app/shared/widgets/primary_button.dart';
 import 'package:library_app/core/routes/app_routes.dart';
@@ -83,13 +84,66 @@ class _AddBookScreenState extends State<AddBookScreen> {
   Future<void> _saveBook() async {
     if (_formKey.currentState?.validate() ?? false) {
       // Kitabı veritabanına kaydetme işlemi burada yapılacak
-      
-      // İşlem başarılıysa kitaplar sayfasına dönüş
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.translate('book_added_successfully'))),
-      );
-      AppRoutes.goBack(context);
+      try {
+        // Gösterim için biraz bekleme süresi ekliyoruz
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return const AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text("Kitap ekleniyor..."),
+                ],
+              ),
+            );
+          },
+        );
+        
+        await Future.delayed(const Duration(seconds: 2));
+        
+        final bookService = BookService();
+        final book = Book(
+          title: _titleController.text.trim(),
+          author: _authorController.text.trim(),
+          publisher: _publisherController.text.trim(),
+          isbn: _isbnController.text.trim(),
+          pages: int.tryParse(_pagesController.text.trim()) ?? 0,
+          language: _selectedLanguage ?? 'Türkçe',
+          category: _selectedCategory ?? 'Diğer',
+          description: _descriptionController.text.trim(),
+          publishDate: _publicationDate,
+          libraryId: 1, // Varsayılan kütüphane ID'si
+        );
+        
+        final result = await bookService.addBook(book);
+        
+        if (!mounted) return;
+        
+        // Yükleme dialogunu kapatma
+        Navigator.pop(context);
+        
+        if (result) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.translate('book_added_successfully'))),
+          );
+          AppRoutes.goBack(context);
+        } else {
+          throw Exception('Kitap eklenemedi');
+        }
+      } catch (e) {
+        if (!mounted) return;
+        
+        // Eğer yükleme dialogu hala açıksa kapatma
+        Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kitap eklenirken bir hata oluştu: $e')),
+        );
+      }
     }
   }
 

@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:library_app/core/theme/app_colors.dart';
 import 'package:library_app/core/theme/app_text_styles.dart';
+import 'package:library_app/features/books/services/book_service.dart';
 import 'package:library_app/shared/widgets/book_cover_image.dart';
+import 'package:provider/provider.dart';
+import 'package:library_app/features/auth/view_models/auth_view_model.dart';
 
 class BookDetailScreen extends StatefulWidget {
+  final int? bookId;
   final Map<String, dynamic>? bookData;
   
-  const BookDetailScreen({Key? key, this.bookData}) : super(key: key);
+  const BookDetailScreen({Key? key, this.bookId, this.bookData}) : super(key: key);
 
   @override
   State<BookDetailScreen> createState() => _BookDetailScreenState();
 }
 
 class _BookDetailScreenState extends State<BookDetailScreen> {
+  final BookService _bookService = BookService();
   bool _isFavorite = false;
   bool _isExpanded = false;
+  bool _isLoading = false;
+  bool _isBorrowing = false;
+  Book? _book;
   
   // Example book data if not provided
   late final Map<String, dynamic> _bookData;
@@ -58,12 +66,69 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     };
     
     _isFavorite = _bookData['isFavorite'] ?? false;
+    
+    // If we have a bookId, load the book data from the service
+    if (widget.bookId != null) {
+      _loadBookDetails();
+    }
+  }
+  
+  Future<void> _loadBookDetails() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final book = await _bookService.getBookById(widget.bookId!);
+      
+      if (book != null) {
+        setState(() {
+          _book = book;
+          _isFavorite = book.isFavorite;
+          
+          // Update the bookData map from the book model
+          _bookData = {
+            'title': book.title,
+            'author': book.author,
+            'coverUrl': book.coverUrl,
+            'rating': book.rating,
+            'publisher': book.publisher,
+            'publishDate': book.publishDate?.toString() ?? '',
+            'pages': book.pages,
+            'isbn': book.isbn,
+            'language': book.language,
+            'category': book.category,
+            'available': book.available,
+            'description': book.description,
+            'isFavorite': book.isFavorite,
+            'reviews': book.reviews?.map((review) => {
+              'user': review.userName,
+              'rating': review.rating,
+              'comment': review.comment,
+              'date': review.date.toString(),
+            }).toList() ?? [],
+          };
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading book details: $e')),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : CustomScrollView(
         slivers: [
           // App bar with book cover
           _buildSliverAppBar(),
@@ -481,30 +546,30 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
           ),
           const SizedBox(width: 16.0),
           
-          // Borrow button
+          // Borrow/Return button
           Expanded(
             flex: 2,
-            child: ElevatedButton.icon(
-              onPressed: _bookData['available'] == true
-                  ? () {
-                      // Borrow the book
-                    }
-                  : null,
-              icon: Icon(
-                _bookData['available'] == true
-                    ? Icons.book_online
-                    : Icons.book_outlined,
-              ),
-              label: Text(_bookData['available'] == true ? 'Borrow Book' : 'Not Available'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+            child: _isBorrowing
+              ? const Center(child: CircularProgressIndicator())
+              : ElevatedButton.icon(
+                onPressed: _bookData['available'] == true
+                    ? () => _borrowBook()
+                    : () => _returnBook(),
+                icon: Icon(
+                  _bookData['available'] == true
+                      ? Icons.book_online
+                      : Icons.assignment_return,
+                ),
+                label: Text(_bookData['available'] == true ? 'Ödünç Al' : 'İade Et'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _bookData['available'] == true ? AppColors.primary : AppColors.success,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
                 ),
               ),
-            ),
           ),
         ],
       ),
@@ -527,5 +592,103 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
     return months[month - 1];
+  }
+  
+  Future<void> _borrowBook() async {
+    // Get the current user from AuthViewModel
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    if (!authViewModel.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kitap ödünç almak için giriş yapmalısınız')),
+      );
+      return;
+    }
+    
+    setState(() {
+      _isBorrowing = true;
+    });
+    
+    try {
+      final bookId = _book?.id ?? widget.bookId;
+      if (bookId == null) {
+        throw Exception('Book ID is not available');
+      }
+      
+      final userId = authViewModel.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User ID is not available');
+      }
+      
+      final success = await _bookService.borrowBook(bookId, userId);
+      
+      if (success) {
+        setState(() {
+          _bookData['available'] = false;
+          if (_book != null) {
+            _book = _book!.copyWith(available: false);
+          }
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Kitap başarıyla ödünç alındı')),
+          );
+        }
+      } else {
+        throw Exception('Failed to borrow book');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kitabı ödünç alma işlemi başarısız oldu: $e')),
+        );
+      }
+    } finally {
+      setState(() {
+        _isBorrowing = false;
+      });
+    }
+  }
+  
+  Future<void> _returnBook() async {
+    setState(() {
+      _isBorrowing = true;
+    });
+    
+    try {
+      final bookId = _book?.id ?? widget.bookId;
+      if (bookId == null) {
+        throw Exception('Book ID is not available');
+      }
+      
+      final success = await _bookService.returnBook(bookId);
+      
+      if (success) {
+        setState(() {
+          _bookData['available'] = true;
+          if (_book != null) {
+            _book = _book!.copyWith(available: true);
+          }
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Kitap başarıyla iade edildi')),
+          );
+        }
+      } else {
+        throw Exception('Failed to return book');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kitap iade işlemi başarısız oldu: $e')),
+        );
+      }
+    } finally {
+      setState(() {
+        _isBorrowing = false;
+      });
+    }
   }
 }

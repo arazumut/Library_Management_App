@@ -8,7 +8,10 @@ import 'package:library_app/core/localization/app_localizations.dart';
 import 'package:library_app/core/routes/app_routes.dart';
 import 'package:library_app/core/services/database_service.dart';
 import 'package:library_app/core/services/storage_service.dart';
+import 'package:library_app/core/services/theme_service.dart';
 import 'package:library_app/core/theme/app_theme.dart';
+import 'package:library_app/features/auth/view_models/auth_view_model.dart';
+import 'package:library_app/core/network/api_service.dart';
 import 'package:library_app/features/auth/views/splash_screen.dart';
 
 void main() async {
@@ -31,11 +34,24 @@ void main() async {
   final databaseService = DatabaseService();
   await databaseService.database; // This initializes the database
   
+  // Initialize API service
+  final apiService = ApiService(storageService);
+  
+  // Initialize theme service
+  final themeService = ThemeService(storageService);
+  
   runApp(
     MultiProvider(
       providers: [
         Provider<StorageService>.value(value: storageService),
         Provider<DatabaseService>.value(value: databaseService),
+        Provider<ApiService>.value(value: apiService),
+        ChangeNotifierProvider<AuthViewModel>(
+          create: (_) => AuthViewModel(apiService, storageService),
+        ),
+        ChangeNotifierProvider<ThemeService>(
+          create: (_) => themeService,
+        ),
         // Add more providers here as needed
       ],
       child: const MyApp(),
@@ -51,7 +67,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.system;
   Locale _locale = const Locale('en', '');
   
   @override
@@ -62,14 +77,6 @@ class _MyAppState extends State<MyApp> {
   
   Future<void> _loadSettings() async {
     final storageService = Provider.of<StorageService>(context, listen: false);
-    
-    // Load theme setting
-    final themeSetting = await storageService.getThemeMode();
-    if (themeSetting != null) {
-      setState(() {
-        _themeMode = _getThemeMode(themeSetting);
-      });
-    }
     
     // Load language setting
     final languageSetting = await storageService.getLanguage();
@@ -85,26 +92,18 @@ class _MyAppState extends State<MyApp> {
       await storageService.saveLanguage('tr');
     }
   }
-  
-  ThemeMode _getThemeMode(String themeSetting) {
-    switch (themeSetting) {
-      case AppConstants.themeModeLight:
-        return ThemeMode.light;
-      case AppConstants.themeModeDark:
-        return ThemeMode.dark;
-      default:
-        return ThemeMode.system;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    // ThemeService kullanarak tema modunu al
+    final themeService = Provider.of<ThemeService>(context);
+    
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: _themeMode,
+      themeMode: themeService.themeMode,
       locale: _locale,
       supportedLocales: const [
         Locale('en', ''), // English

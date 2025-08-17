@@ -3,6 +3,7 @@ import 'package:library_app/features/onboarding/views/onboarding_screen.dart';
 import 'package:library_app/features/auth/views/login_screen.dart';
 import 'package:library_app/features/home/views/home_screen.dart';
 import 'package:library_app/features/books/views/add_book_screen.dart';
+import 'package:library_app/features/books/views/book_detail_screen.dart';
 import 'package:library_app/features/libraries/views/add_library_screen.dart';
 import 'package:library_app/features/libraries/views/libraries_screen.dart';
 import 'package:library_app/features/libraries/views/library_detail_screen.dart';
@@ -99,6 +100,11 @@ class AppRoutes {
           builder: (_) => LibraryDetailScreen(
             libraryId: settings.arguments as int,
           ),
+        );
+      case bookDetails:
+        final bookId = settings.arguments as int;
+        return MaterialPageRoute(
+          builder: (_) => BookDetailScreen(bookId: bookId),
         );
       // Add more routes here as they are implemented
       

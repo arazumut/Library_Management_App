@@ -5,6 +5,7 @@ import 'package:library_app/core/theme/app_colors.dart';
 import 'package:library_app/core/theme/app_text_styles.dart';
 import 'package:library_app/core/utils/validation_utils.dart';
 import 'package:library_app/core/localization/app_localizations.dart';
+import 'package:library_app/features/auth/view_models/auth_view_model.dart';
 import 'package:library_app/shared/widgets/custom_text_field.dart';
 import 'package:library_app/shared/widgets/primary_button.dart';
 
@@ -37,20 +38,58 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // This will be implemented when the AuthViewModel is created
-      // final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      // await authViewModel.login(
-      //   email: _emailController.text,
-      //   password: _passwordController.text,
-      //   rememberMe: _rememberMe,
-      // );
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
       
-      // For now, navigate to home screen directly
-      if (!mounted) return;
-      AppRoutes.navigateToAndRemove(context, AppRoutes.home);
+      // Show loading indicator
+      _showLoadingDialog();
+      
+      final success = await authViewModel.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        rememberMe: _rememberMe,
+      );
+      
+      // Hide loading dialog
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+      
+      if (success) {
+        if (!mounted) return;
+        AppRoutes.navigateToAndRemove(context, AppRoutes.home);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              authViewModel.errorMessage ?? context.l10n.translate('login_failed'),
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
+  void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text("Giriş yapılıyor..."),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(

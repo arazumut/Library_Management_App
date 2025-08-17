@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:library_app/core/routes/app_routes.dart';
 import 'package:library_app/core/theme/app_colors.dart';
 import 'package:library_app/core/theme/app_text_styles.dart';
+import 'package:library_app/features/auth/view_models/auth_view_model.dart';
+import 'package:library_app/core/services/theme_service.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -10,27 +14,59 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Dummy user data
-  final Map<String, dynamic> _userData = {
-    'name': 'John Doe',
-    'email': 'john.doe@example.com',
-    'memberSince': '2023-06-15',
-    'membershipType': 'Gold',
-    'membershipExpiry': '2024-06-15',
-    'avatarUrl': '',
-    'stats': {
-      'totalBooks': 24,
-      'currentlyBorrowing': 2,
-      'readingStreak': 15,
-      'overdueBooks': 0,
-      'favoriteGenre': 'Science Fiction',
-    },
-    'preferences': {
-      'notifications': true,
-      'darkMode': false,
-      'language': 'English',
+  // Kullanıcı verileri
+  late Map<String, dynamic> _userData;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Tema servisinden tema modunu al
+    final themeService = Provider.of<ThemeService>(context, listen: false);
+    
+    // Varsayılan değerler
+    _userData = {
+      'name': 'Kullanıcı',
+      'email': 'kullanici@example.com',
+      'memberSince': DateTime.now().toString(),
+      'membershipType': 'Standard',
+      'membershipExpiry': DateTime.now().add(const Duration(days: 365)).toString(),
+      'avatarUrl': '',
+      'stats': {
+        'totalBooks': 0,
+        'currentlyBorrowing': 0,
+        'readingStreak': 0,
+        'overdueBooks': 0,
+        'favoriteGenre': 'Belirlenmedi',
+      },
+      'preferences': {
+        'notifications': true,
+        'darkMode': themeService.isDarkMode,
+        'language': 'Türkçe',
+      }
+    };
+    
+    // Kullanıcı verilerini yükle
+    _loadUserData();
+  }
+  
+  void _loadUserData() {
+    try {
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      if (authViewModel.isAuthenticated && authViewModel.currentUser != null) {
+        final user = authViewModel.currentUser!;
+        setState(() {
+          _userData['name'] = user.name;
+          _userData['email'] = user.email;
+          if (user.profileImageUrl != null) {
+            _userData['avatarUrl'] = user.profileImageUrl!;
+          }
+        });
+      }
+    } catch (e) {
+      // İsteğe bağlı olarak hata işle
+      debugPrint('Kullanıcı verileri yüklenirken hata oluştu: $e');
     }
-  };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +195,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        // Logout functionality
+                        _showLogoutConfirmationDialog();
                       },
                       icon: const Icon(Icons.logout, color: AppColors.error),
                       label: Text(
@@ -402,15 +438,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             },
           ),
           const Divider(height: 0),
-          SwitchListTile(
-            title: const Text('Dark Mode'),
-            subtitle: const Text('Toggle between light and dark theme'),
-            value: _userData['preferences']['darkMode'],
-            activeColor: AppColors.primary,
-            onChanged: (bool value) {
-              setState(() {
-                _userData['preferences']['darkMode'] = value;
-              });
+          Consumer<ThemeService>(
+            builder: (context, themeService, child) {
+              return SwitchListTile(
+                title: const Text('Dark Mode'),
+                subtitle: const Text('Toggle between light and dark theme'),
+                value: themeService.isDarkMode,
+                activeColor: AppColors.primary,
+                onChanged: (bool value) {
+                  if (value) {
+                    themeService.setDarkMode();
+                  } else {
+                    themeService.setLightMode();
+                  }
+                  setState(() {
+                    _userData['preferences']['darkMode'] = value;
+                  });
+                },
+              );
             },
           ),
           const Divider(height: 0),
@@ -430,29 +475,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildActionsCard() {
     final List<Map<String, dynamic>> actions = [
       {
-        'title': 'My Saved Books',
+        'title': 'Kayıtlı Kitaplarım',
         'icon': Icons.bookmark,
         'color': AppColors.primary,
+        'onTap': () {
+          // Navigate to saved books
+        },
       },
       {
-        'title': 'Reading History',
+        'title': 'Okuma Geçmişim',
         'icon': Icons.history,
         'color': AppColors.secondary,
+        'onTap': () {
+          // Navigate to reading history
+        },
       },
       {
-        'title': 'Payment Methods',
+        'title': 'Ödeme Yöntemleri',
         'icon': Icons.payment,
         'color': Colors.green,
+        'onTap': () {
+          // Navigate to payment methods
+        },
       },
       {
-        'title': 'Help & Support',
+        'title': 'Yardım & Destek',
         'icon': Icons.help_outline,
         'color': Colors.orange,
+        'onTap': () {
+          // Navigate to help and support
+        },
       },
       {
-        'title': 'Privacy & Terms',
+        'title': 'Gizlilik ve Koşullar',
         'icon': Icons.privacy_tip_outlined,
         'color': Colors.purple,
+        'onTap': () {
+          // Navigate to privacy and terms
+        },
+      },
+      {
+        'title': 'Çıkış Yap',
+        'icon': Icons.exit_to_app,
+        'color': Colors.red,
+        'onTap': () {
+          _showLogoutConfirmationDialog();
+        },
       },
     ];
     
@@ -485,7 +553,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: Text(action['title']),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16.0),
             onTap: () {
-              // Navigate to respective screens
+              final onTapFunction = action['onTap'] as void Function();
+              onTapFunction();
             },
           );
         },
@@ -521,5 +590,67 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
     return months[month - 1];
+  }
+  
+  void _showLogoutConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Çıkış Yapmak İstediğinize Emin Misiniz?'),
+        content: const Text('Çıkış yaptığınızda, tekrar giriş yapmanız gerekecektir.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+            },
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context); // Close the dialog
+              _logout();
+            },
+            child: const Text('Çıkış Yap'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Future<void> _logout() async {
+    try {
+      // Çıkış işlemi için yükleme göstergesini göster
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+      
+      final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      await authViewModel.logout();
+      
+      if (!mounted) return;
+      
+      // Yükleme göstergesini kaldır
+      Navigator.pop(context);
+      
+      // Login sayfasına yönlendir
+      AppRoutes.navigateToAndRemove(context, AppRoutes.login);
+    } catch (e) {
+      if (!mounted) return;
+      
+      // Yükleme göstergesini kaldır
+      Navigator.of(context, rootNavigator: true).pop();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Çıkış yaparken bir hata oluştu: $e')),
+      );
+    }
   }
 }

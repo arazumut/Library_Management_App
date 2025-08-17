@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:library_app/core/theme/app_colors.dart';
 import 'package:library_app/core/theme/app_text_styles.dart';
 import 'package:library_app/core/utils/validation_utils.dart';
-
+import 'package:library_app/core/localization/app_localizations.dart';
 import 'package:library_app/shared/widgets/custom_text_field.dart';
 import 'package:library_app/shared/widgets/primary_button.dart';
 import 'package:library_app/core/routes/app_routes.dart';
@@ -90,9 +90,9 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
         await libraryService.addLibrary(library);
         
         if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kütüphane başarıyla eklendi')),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.translate('library_added_successfully'))),
+        );
         AppRoutes.goBack(context);
       } catch (e) {
         if (!mounted) return;
@@ -308,7 +308,7 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
 
               // Kaydet Butonu
               PrimaryButton(
-                text: 'Kaydet',
+                text: context.l10n.translate('save'),
                 onPressed: _saveLibrary,
               ),
               const SizedBox(height: 24),
