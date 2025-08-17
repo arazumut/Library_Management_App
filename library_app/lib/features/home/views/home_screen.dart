@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return [
       context.l10n.translate('Anasayfa'),
       context.l10n.translate('Tüm Kitaplar'),
-      context.l10n.translate('Kategoriler'),
+      context.l10n.translate('Ödünçler'),
       context.l10n.translate('Profil'),
     ];
   }
@@ -82,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.book_online),
-            label: context.l10n.translate('Kategoriler'),
+            label: context.l10n.translate('Ödünçler'),
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.person),
