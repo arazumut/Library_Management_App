@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:library_app/core/theme/app_colors.dart';
 import 'package:library_app/core/theme/app_text_styles.dart';
-import 'package:library_app/core/localization/app_localizations.dart';
+
 import 'package:library_app/features/books/views/books_screen.dart';
 import 'package:library_app/features/home/views/home_tab.dart';
 import 'package:library_app/features/loans/views/loans_screen.dart';
 import 'package:library_app/features/profile/views/profile_screen.dart';
+import 'package:library_app/features/libraries/views/libraries_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -20,16 +21,18 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [
     const HomeTab(),
     const BooksScreen(),
+    const LibrariesScreen(),
     const LoansScreen(),
     const ProfileScreen(),
   ];
   
   List<String> _getTitles(BuildContext context) {
     return [
-      context.l10n.translate('Anasayfa'),
-      context.l10n.translate('Tüm Kitaplar'),
-      context.l10n.translate('Ödünçler'),
-      context.l10n.translate('Profil'),
+      'Anasayfa',
+      'Tüm Kitaplar',
+      'Kütüphaneler',
+      'Ödünçler',
+      'Profil',
     ];
   }
   
@@ -74,19 +77,23 @@ class _HomeScreenState extends State<HomeScreen> {
         items: [
           BottomNavigationBarItem(
             icon: const Icon(Icons.home),
-            label: context.l10n.translate('Anasayfa'),
+            label: 'Anasayfa',
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.book),
-            label: context.l10n.translate('Tüm Kitaplar'),
+            label: 'Tüm Kitaplar',
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.account_balance),
+            label: 'Kütüphaneler',
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.book_online),
-            label: context.l10n.translate('Ödünçler'),
+            label: 'Ödünçler',
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.person),
-            label: context.l10n.translate('Profil'),
+            label: 'Profil',
           ),
         ],
       ),

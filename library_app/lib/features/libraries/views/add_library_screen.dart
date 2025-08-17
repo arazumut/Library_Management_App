@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:library_app/core/theme/app_colors.dart';
 import 'package:library_app/core/theme/app_text_styles.dart';
 import 'package:library_app/core/utils/validation_utils.dart';
-import 'package:library_app/core/localization/app_localizations.dart';
+
 import 'package:library_app/shared/widgets/custom_text_field.dart';
 import 'package:library_app/shared/widgets/primary_button.dart';
 import 'package:library_app/core/routes/app_routes.dart';
+import 'package:library_app/features/libraries/models/library.dart';
+import 'package:library_app/features/libraries/services/library_service.dart';
 
 class AddLibraryScreen extends StatefulWidget {
   const AddLibraryScreen({Key? key}) : super(key: key);
@@ -67,14 +69,37 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
 
   Future<void> _saveLibrary() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Kütüphaneyi veritabanına kaydetme işlemi burada yapılacak
-      
-      // İşlem başarılıysa kütüphaneler sayfasına dönüş
-      if (!mounted) return;
+      try {
+        // Create a Library object from the form data
+        final library = Library(
+          name: _nameController.text,
+          address: _addressController.text,
+          phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
+          email: _emailController.text.isNotEmpty ? _emailController.text : null,
+          website: _websiteController.text.isNotEmpty ? _websiteController.text : null,
+          description: _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
+          openingTime: _openingTime,
+          closingTime: _closingTime,
+          openDays: _openDays,
+          userId: 1, // Current user ID - this would typically come from authentication
+          isPublic: true, // Default to public
+        );
+        
+        // Save the library to the database
+        final libraryService = LibraryService();
+        await libraryService.addLibrary(library);
+        
+        if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.translate('library_added_successfully'))),
+        const SnackBar(content: Text('Kütüphane başarıyla eklendi')),
       );
-      AppRoutes.goBack(context);
+        AppRoutes.goBack(context);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
@@ -87,18 +112,18 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final List<String> weekDays = [
-      context.l10n.translate('monday'),
-      context.l10n.translate('tuesday'),
-      context.l10n.translate('wednesday'),
-      context.l10n.translate('thursday'),
-      context.l10n.translate('friday'),
-      context.l10n.translate('saturday'),
-      context.l10n.translate('sunday'),
+      'Pazartesi',
+      'Salı',
+      'Çarşamba',
+      'Perşembe',
+      'Cuma',
+      'Cumartesi',
+      'Pazar',
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n.translate('add_library')),
+        title: const Text('Kütüphane Ekle'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
@@ -131,7 +156,7 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      context.l10n.translate('add_library_image'),
+                      'Kütüphane Fotoğrafı Ekle',
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.primary,
                       ),
@@ -144,9 +169,9 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
               // Kütüphane Bilgileri Formu
               CustomTextField(
                 controller: _nameController,
-                label: context.l10n.translate('library_name'),
-                hint: context.l10n.translate('enter_library_name'),
-                validator: (value) => ValidationUtils.validateRequired(value, context.l10n.translate('library_name')),
+                label: 'Kütüphane Adı',
+                hint: 'Kütüphane adını girin',
+                validator: (value) => ValidationUtils.validateRequired(value, 'Kütüphane Adı'),
                 prefix: const Icon(Icons.account_balance),
                 required: true,
               ),
@@ -154,9 +179,9 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
 
               CustomTextField(
                 controller: _addressController,
-                label: context.l10n.translate('address'),
-                hint: context.l10n.translate('enter_address'),
-                validator: (value) => ValidationUtils.validateRequired(value, context.l10n.translate('address')),
+                label: 'Adres',
+                hint: 'Kütüphane adresini girin',
+                validator: (value) => ValidationUtils.validateRequired(value, 'Adres'),
                 prefix: const Icon(Icons.location_on),
                 maxLines: 3,
                 required: true,
@@ -165,8 +190,8 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
 
               CustomTextField(
                 controller: _phoneController,
-                label: context.l10n.translate('phone'),
-                hint: context.l10n.translate('enter_phone'),
+                label: 'Telefon',
+                hint: 'Telefon numarasını girin',
                 prefix: const Icon(Icons.phone),
                 keyboardType: TextInputType.phone,
               ),
@@ -174,8 +199,8 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
 
               CustomTextField(
                 controller: _emailController,
-                label: context.l10n.translate('email'),
-                hint: context.l10n.translate('enter_email'),
+                label: 'E-posta',
+                hint: 'E-posta adresini girin',
                 prefix: const Icon(Icons.email),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
@@ -189,8 +214,8 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
 
               CustomTextField(
                 controller: _websiteController,
-                label: context.l10n.translate('website'),
-                hint: context.l10n.translate('enter_website'),
+                label: 'Web Sitesi',
+                hint: 'Web sitesi adresini girin',
                 prefix: const Icon(Icons.web),
                 keyboardType: TextInputType.url,
               ),
@@ -198,7 +223,7 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
 
               // Çalışma Saatleri
               Text(
-                context.l10n.translate('working_hours'),
+                'Çalışma Saatleri',
                 style: AppTextStyles.headline4.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -212,7 +237,7 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
                       onTap: () => _selectOpeningTime(context),
                       child: InputDecorator(
                         decoration: InputDecoration(
-                          labelText: context.l10n.translate('opening_time'),
+                          labelText: 'Açılış Saati',
                           prefixIcon: const Icon(Icons.access_time),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12.0),
@@ -228,7 +253,7 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
                       onTap: () => _selectClosingTime(context),
                       child: InputDecorator(
                         decoration: InputDecoration(
-                          labelText: context.l10n.translate('closing_time'),
+                          labelText: 'Kapanış Saati',
                           prefixIcon: const Icon(Icons.access_time),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12.0),
@@ -244,7 +269,7 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
 
               // Açık Günler
               Text(
-                context.l10n.translate('open_days'),
+                'Açık Günler',
                 style: AppTextStyles.headline4.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -274,8 +299,8 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
               // Açıklama
               CustomTextField(
                 controller: _descriptionController,
-                label: context.l10n.translate('description'),
-                hint: context.l10n.translate('enter_library_description'),
+                label: 'Açıklama',
+                hint: 'Kütüphane hakkında açıklama girin',
                 prefix: const Icon(Icons.description),
                 maxLines: 5,
               ),
@@ -283,7 +308,7 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
 
               // Kaydet Butonu
               PrimaryButton(
-                text: context.l10n.translate('save'),
+                text: 'Kaydet',
                 onPressed: _saveLibrary,
               ),
               const SizedBox(height: 24),

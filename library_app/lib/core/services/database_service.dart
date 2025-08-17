@@ -19,9 +19,35 @@ class DatabaseService {
     final path = join(await getDatabasesPath(), 'library_database.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Increment version number to trigger onUpgrade
       onCreate: _createDatabase,
+      onUpgrade: _upgradeDatabase,
     );
+  }
+
+  Future<void> _upgradeDatabase(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Create Libraries table if upgrading from version 1
+      await db.execute('''
+        CREATE TABLE libraries(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          address TEXT NOT NULL,
+          phone TEXT,
+          email TEXT,
+          website TEXT,
+          description TEXT,
+          imageUrl TEXT,
+          openingTime TEXT NOT NULL,
+          closingTime TEXT NOT NULL,
+          openDays TEXT NOT NULL,
+          userId INTEGER NOT NULL,
+          isPublic INTEGER DEFAULT 1,
+          createdAt TEXT NOT NULL,
+          FOREIGN KEY (userId) REFERENCES users (id)
+        )
+      ''');
+    }
   }
 
   Future<void> _createDatabase(Database db, int version) async {
@@ -37,6 +63,7 @@ class DatabaseService {
         pageCount INTEGER,
         publishedDate TEXT,
         category TEXT,
+        libraryId INTEGER,
         isAvailable INTEGER DEFAULT 1
       )
     ''');
@@ -50,6 +77,27 @@ class DatabaseService {
         passwordHash TEXT NOT NULL,
         role TEXT DEFAULT 'member',
         createdAt TEXT NOT NULL
+      )
+    ''');
+
+    // Create Libraries table
+    await db.execute('''
+      CREATE TABLE libraries(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        address TEXT NOT NULL,
+        phone TEXT,
+        email TEXT,
+        website TEXT,
+        description TEXT,
+        imageUrl TEXT,
+        openingTime TEXT NOT NULL,
+        closingTime TEXT NOT NULL,
+        openDays TEXT NOT NULL,
+        userId INTEGER NOT NULL,
+        isPublic INTEGER DEFAULT 1,
+        createdAt TEXT NOT NULL,
+        FOREIGN KEY (userId) REFERENCES users (id)
       )
     ''');
 
@@ -160,6 +208,75 @@ class DatabaseService {
       'books',
       where: 'category = ?',
       whereArgs: [category],
+    );
+  }
+  
+  // Libraries CRUD operations
+  Future<int> insertLibrary(Map<String, dynamic> library) async {
+    final db = await database;
+    return await db.insert('libraries', library);
+  }
+  
+  Future<List<Map<String, dynamic>>> getLibraries() async {
+    final db = await database;
+    return await db.query('libraries');
+  }
+  
+  Future<List<Map<String, dynamic>>> getUserLibraries(int userId) async {
+    final db = await database;
+    return await db.query(
+      'libraries',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+  }
+  
+  Future<List<Map<String, dynamic>>> getPublicLibraries() async {
+    final db = await database;
+    return await db.query(
+      'libraries',
+      where: 'isPublic = ?',
+      whereArgs: [1],
+    );
+  }
+  
+  Future<Map<String, dynamic>?> getLibrary(int id) async {
+    final db = await database;
+    final results = await db.query(
+      'libraries',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+  
+  Future<int> updateLibrary(Map<String, dynamic> library) async {
+    final db = await database;
+    return await db.update(
+      'libraries',
+      library,
+      where: 'id = ?',
+      whereArgs: [library['id']],
+    );
+  }
+  
+  Future<int> deleteLibrary(int id) async {
+    final db = await database;
+    return await db.delete(
+      'libraries',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+  
+  // Get books in a library
+  Future<List<Map<String, dynamic>>> getLibraryBooks(int libraryId) async {
+    final db = await database;
+    return await db.query(
+      'books',
+      where: 'libraryId = ?',
+      whereArgs: [libraryId],
     );
   }
 }

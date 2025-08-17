@@ -4,6 +4,8 @@ import 'package:library_app/features/auth/views/login_screen.dart';
 import 'package:library_app/features/home/views/home_screen.dart';
 import 'package:library_app/features/books/views/add_book_screen.dart';
 import 'package:library_app/features/libraries/views/add_library_screen.dart';
+import 'package:library_app/features/libraries/views/libraries_screen.dart';
+import 'package:library_app/features/libraries/views/library_detail_screen.dart';
 
 class AppRoutes {
   // Route Names
@@ -26,6 +28,10 @@ class AppRoutes {
   static const String notifications = '/notifications';
   static const String readingGoals = '/reading-goals';
   static const String settings = '/settings';
+  static const String libraries = '/libraries';
+  static const String libraryAdd = '/library-add';
+  static const String libraryDetail = '/library-detail';
+  static const String libraryEdit = '/library-edit';
   
   // Route Map
   static Map<String, WidgetBuilder> routes = {
@@ -79,9 +85,20 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => const AddBookScreen(),
         );
+      case libraryAdd:
       case libraryManagement:
         return MaterialPageRoute(
           builder: (_) => const AddLibraryScreen(),
+        );
+      case libraries:
+        return MaterialPageRoute(
+          builder: (_) => const LibrariesScreen(),
+        );
+      case libraryDetail:
+        return MaterialPageRoute(
+          builder: (_) => LibraryDetailScreen(
+            libraryId: settings.arguments as int,
+          ),
         );
       // Add more routes here as they are implemented
       
