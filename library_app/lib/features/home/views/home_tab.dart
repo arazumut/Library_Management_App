@@ -56,9 +56,9 @@ class _HomeTabState extends State<HomeTab> {
               
               // Your current loans section
               _buildSectionHeader('Your Current Loans', onSeeAllPressed: () {}),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12), // 16px'ten 12px'e düşürdük
               _buildLoansList(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24), // Daha fazla boşluk ekledik
             ],
           ),
         ),
@@ -196,7 +196,7 @@ class _HomeTabState extends State<HomeTab> {
     ];
     
     return SizedBox(
-      height: 220,
+      height: 242, // Yüksekliği artırdık (220'den 242'ye)
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: books.length,
@@ -215,13 +215,14 @@ class _HomeTabState extends State<HomeTab> {
                     height: 180,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4), // 8px'den 4px'e düşürdük
                 Text(
                   books[index]['title'],
                   style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 2), // Başlık ve yazar arasında çok küçük bir boşluk
                 Text(
                   books[index]['author'],
                   style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
@@ -245,12 +246,7 @@ class _HomeTabState extends State<HomeTab> {
         'coverUrl': 'https://upload.wikimedia.org/wikipedia/commons/7/7a/The_Great_Gatsby_Cover_1925_Retouched.jpg',
         'dueDate': 'Due in 3 days',
       },
-      {
-        'title': '1984',
-        'author': 'George Orwell',
-        'coverUrl': 'https://upload.wikimedia.org/wikipedia/commons/c/c3/1984first.jpg',
-        'dueDate': 'Due in 5 days',
-      },
+      // Bir öğeyi kaldırdık - taşmayı azaltmak için
     ];
     
     if (loans.isEmpty) {
@@ -285,12 +281,13 @@ class _HomeTabState extends State<HomeTab> {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero, // Fazladan padding'i kaldırıyoruz
       itemCount: loans.length,
       itemBuilder: (context, index) {
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Dikey padding'i azalttık
             child: Row(
               children: [
                 BookCoverImage(
