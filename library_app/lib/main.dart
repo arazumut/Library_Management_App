@@ -77,6 +77,12 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         _locale = Locale(languageSetting, '');
       });
+    } else {
+      // Varsayılan olarak Türkçe ayarla
+      setState(() {
+        _locale = const Locale('tr', '');
+      });
+      await storageService.saveLanguage('tr');
     }
   }
   

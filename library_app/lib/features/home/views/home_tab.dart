@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:library_app/core/theme/app_colors.dart';
 import 'package:library_app/core/theme/app_text_styles.dart';
+import 'package:library_app/core/localization/app_localizations.dart';
 import 'package:library_app/shared/widgets/book_cover_image.dart';
 
 class HomeTab extends StatefulWidget {
@@ -26,12 +27,12 @@ class _HomeTabState extends State<HomeTab> {
             children: [
               // Welcome message
               Text(
-                'Welcome back, User!',
+                context.l10n.translate('Tekrar Hoşgeldin'),
                 style: AppTextStyles.headline2,
               ),
               const SizedBox(height: 8),
               Text(
-                'Discover your next favorite book',
+                context.l10n.translate('Favori Kitaplarini Keşfet'),
                 style: AppTextStyles.bodyLarge.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -43,19 +44,19 @@ class _HomeTabState extends State<HomeTab> {
               const SizedBox(height: 24),
               
               // Recently added books section
-              _buildSectionHeader('Recently Added Books', onSeeAllPressed: () {}),
+              _buildSectionHeader(context.l10n.translate('Daha Önce Eklenen Kitaplar'), onSeeAllPressed: () {}),
               const SizedBox(height: 16),
               _buildHorizontalBooksList(),
               const SizedBox(height: 24),
               
               // Popular books section
-              _buildSectionHeader('Popular Books', onSeeAllPressed: () {}),
+              _buildSectionHeader(context.l10n.translate('Trend Kitaplar'), onSeeAllPressed: () {}),
               const SizedBox(height: 16),
               _buildHorizontalBooksList(),
               const SizedBox(height: 24),
               
               // Your current loans section
-              _buildSectionHeader('Your Current Loans', onSeeAllPressed: () {}),
+              _buildSectionHeader(context.l10n.translate('Mevcut Ödünçleriniz'), onSeeAllPressed: () {}),
               const SizedBox(height: 12), // 16px'ten 12px'e düşürdük
               _buildLoansList(),
               const SizedBox(height: 24), // Daha fazla boşluk ekledik
@@ -84,7 +85,7 @@ class _HomeTabState extends State<HomeTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your Reading Stats',
+            context.l10n.translate('Okuma İstatistikleri'),
             style: AppTextStyles.headline3.copyWith(
               color: Colors.white,
             ),
@@ -93,13 +94,13 @@ class _HomeTabState extends State<HomeTab> {
           Row(
             children: [
               Expanded(
-                child: _buildStatItem('3', 'Books\nReading'),
+                child: _buildStatItem('3', context.l10n.translate('Okunan Kitaplar')),
               ),
               Expanded(
-                child: _buildStatItem('12', 'Books\nCompleted'),
+                child: _buildStatItem('12', context.l10n.translate('Tamamlanan Kitaplar')),
               ),
               Expanded(
-                child: _buildStatItem('5', 'Books in\nWishlist'),
+                child: _buildStatItem('5', context.l10n.translate('İstek Listesi')),
               ),
             ],
           ),

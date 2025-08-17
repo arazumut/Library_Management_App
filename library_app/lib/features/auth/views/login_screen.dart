@@ -4,10 +4,9 @@ import 'package:library_app/core/routes/app_routes.dart';
 import 'package:library_app/core/theme/app_colors.dart';
 import 'package:library_app/core/theme/app_text_styles.dart';
 import 'package:library_app/core/utils/validation_utils.dart';
-import 'package:library_app/features/auth/view_models/auth_view_model.dart';
+import 'package:library_app/core/localization/app_localizations.dart';
 import 'package:library_app/shared/widgets/custom_text_field.dart';
 import 'package:library_app/shared/widgets/primary_button.dart';
-import 'package:library_app/shared/widgets/secondary_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -81,12 +80,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Library App',
+                    context.l10n.translate('app_name'),
                     style: AppTextStyles.headline1,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sign in to continue',
+                    context.l10n.translate('sign_in_to_continue'),
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -96,8 +95,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Email field
                   CustomTextField(
                     controller: _emailController,
-                    label: 'Email',
-                    hint: 'Enter your email',
+                    label: context.l10n.translate('email'),
+                    hint: context.l10n.translate('enter_email'),
                     keyboardType: TextInputType.emailAddress,
                     validator: ValidationUtils.validateEmail,
                     prefix: const Icon(Icons.email_outlined),
@@ -109,10 +108,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Password field
                   CustomTextField(
                     controller: _passwordController,
-                    label: 'Password',
-                    hint: 'Enter your password',
+                    label: context.l10n.translate('password'),
+                    hint: context.l10n.translate('enter_password'),
                     obscureText: _obscurePassword,
-                    validator: (value) => ValidationUtils.validateRequired(value, 'Password'),
+                    validator: (value) => ValidationUtils.validateRequired(value, context.l10n.translate('password')),
                     prefix: const Icon(Icons.lock_outline),
                     suffix: IconButton(
                       icon: Icon(
@@ -140,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             activeColor: AppColors.primary,
                           ),
                           Text(
-                            'Remember me',
+                            context.l10n.translate('remember_me'),
                             style: AppTextStyles.bodyMedium,
                           ),
                         ],
@@ -150,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           AppRoutes.navigateTo(context, AppRoutes.forgotPassword);
                         },
                         child: Text(
-                          'Forgot Password?',
+                          context.l10n.translate('forgot_password'),
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
@@ -163,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   
                   // Login button
                   PrimaryButton(
-                    text: 'Login',
+                    text: context.l10n.translate('login'),
                     onPressed: _login,
                   ),
                   const SizedBox(height: 16),
@@ -173,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Don\'t have an account? ',
+                        context.l10n.translate('dont_have_account'),
                         style: AppTextStyles.bodyMedium,
                       ),
                       TextButton(
@@ -181,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           AppRoutes.navigateTo(context, AppRoutes.register);
                         },
                         child: Text(
-                          'Register',
+                          context.l10n.translate('register'),
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
@@ -195,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   
                   // Social login options (to be implemented)
                   Text(
-                    'Or sign in with',
+                    context.l10n.translate('or_sign_in_with'),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.textSecondary,
                     ),

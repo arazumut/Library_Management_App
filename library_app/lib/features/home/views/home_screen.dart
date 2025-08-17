@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:library_app/core/theme/app_colors.dart';
 import 'package:library_app/core/theme/app_text_styles.dart';
+import 'package:library_app/core/localization/app_localizations.dart';
 import 'package:library_app/features/books/views/books_screen.dart';
 import 'package:library_app/features/home/views/home_tab.dart';
 import 'package:library_app/features/loans/views/loans_screen.dart';
@@ -23,12 +24,14 @@ class _HomeScreenState extends State<HomeScreen> {
     const ProfileScreen(),
   ];
   
-  final List<String> _titles = [
-    'Home',
-    'Books',
-    'Loans',
-    'Profile',
-  ];
+  List<String> _getTitles(BuildContext context) {
+    return [
+      context.l10n.translate('Anasayfa'),
+      context.l10n.translate('Tüm Kitaplar'),
+      context.l10n.translate('Kategoriler'),
+      context.l10n.translate('Profil'),
+    ];
+  }
   
   void _onTabTapped(int index) {
     setState(() {
@@ -40,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titles[_currentIndex]),
+        title: Text(_getTitles(context)[_currentIndex]),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -68,22 +71,22 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: AppColors.textSecondary,
         selectedLabelStyle: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
         unselectedLabelStyle: AppTextStyles.caption,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: const Icon(Icons.home),
+            label: context.l10n.translate('Anasayfa'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: 'Books',
+            icon: const Icon(Icons.book),
+            label: context.l10n.translate('Tüm Kitaplar'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.book_online),
-            label: 'Loans',
+            icon: const Icon(Icons.book_online),
+            label: context.l10n.translate('Kategoriler'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: const Icon(Icons.person),
+            label: context.l10n.translate('Profil'),
           ),
         ],
       ),

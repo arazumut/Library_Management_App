@@ -81,7 +81,11 @@ class StorageService {
   }
   
   Future<String?> getLanguage() async {
-    return _prefs.getString(_languageKey) ?? 'en'; // Default language is English
+    return _prefs.getString(_languageKey);
+  }
+  
+  Future<bool> saveLanguage(String language) async {
+    return await _prefs.setString(_languageKey, language);
   }
   
   Future<bool> setIsFirstRun(bool isFirstRun) async {

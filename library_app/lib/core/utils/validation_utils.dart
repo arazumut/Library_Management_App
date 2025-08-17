@@ -162,4 +162,14 @@ class ValidationUtils {
     }
     return null;
   }
+  
+  static String? validateISBN(String? value) {
+    if (value == null || value.isEmpty) {
+      return null; // ISBN is optional
+    }
+    if (!isValidISBN(value)) {
+      return 'Please enter a valid ISBN number';
+    }
+    return null;
+  }
 }

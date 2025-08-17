@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:library_app/features/onboarding/views/onboarding_screen.dart';
 import 'package:library_app/features/auth/views/login_screen.dart';
 import 'package:library_app/features/home/views/home_screen.dart';
+import 'package:library_app/features/books/views/add_book_screen.dart';
+import 'package:library_app/features/libraries/views/add_library_screen.dart';
 
 class AppRoutes {
   // Route Names
@@ -72,6 +74,14 @@ class AppRoutes {
       case home:
         return MaterialPageRoute(
           builder: (_) => const HomeScreen(),
+        );
+      case bookAdd:
+        return MaterialPageRoute(
+          builder: (_) => const AddBookScreen(),
+        );
+      case libraryManagement:
+        return MaterialPageRoute(
+          builder: (_) => const AddLibraryScreen(),
         );
       // Add more routes here as they are implemented
       

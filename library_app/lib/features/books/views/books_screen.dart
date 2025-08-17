@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:library_app/core/theme/app_colors.dart';
 import 'package:library_app/core/theme/app_text_styles.dart';
+import 'package:library_app/core/localization/app_localizations.dart';
 import 'package:library_app/shared/widgets/book_cover_image.dart';
+import 'package:library_app/core/routes/app_routes.dart';
 
 class BooksScreen extends StatefulWidget {
   const BooksScreen({Key? key}) : super(key: key);
@@ -38,7 +40,7 @@ class _BooksScreenState extends State<BooksScreen> with SingleTickerProviderStat
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search books by title, author or ISBN',
+                hintText: context.l10n.translate('search_books_hint'),
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.filter_list),
@@ -69,10 +71,10 @@ class _BooksScreenState extends State<BooksScreen> with SingleTickerProviderStat
             indicatorColor: AppColors.primary,
             labelStyle: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
             unselectedLabelStyle: AppTextStyles.bodyMedium,
-            tabs: const [
-              Tab(text: 'All Books'),
-              Tab(text: 'Categories'),
-              Tab(text: 'Saved'),
+            tabs: [
+              Tab(text: context.l10n.translate('all_books')),
+              Tab(text: context.l10n.translate('categories')),
+              Tab(text: context.l10n.translate('saved')),
             ],
           ),
           
@@ -96,7 +98,7 @@ class _BooksScreenState extends State<BooksScreen> with SingleTickerProviderStat
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to scan book page or add book page (for admins)
+          AppRoutes.navigateTo(context, AppRoutes.bookAdd);
         },
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.qr_code_scanner, color: Colors.white),
