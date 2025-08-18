@@ -109,11 +109,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.primaryLight
+                                : AppColors.primary,
                             padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
+                            elevation: 4,
                           ),
                           child: Text(
                             _currentPage == _totalPages - 1 ? 'Start' : 'Next',
@@ -156,6 +159,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         iconData = Icons.info;
     }
 
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.all(40.0),
       child: Column(
@@ -165,13 +170,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: isDarkMode 
+                  ? AppColors.primaryLight.withOpacity(0.2) 
+                  : AppColors.primary.withOpacity(0.1),
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 5,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
             child: Icon(
               iconData,
               size: 60,
-              color: AppColors.primary,
+              color: isDarkMode ? AppColors.primaryLight : AppColors.primary,
             ),
           ),
           const SizedBox(height: 40),
@@ -179,14 +193,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             title,
             style: AppTextStyles.headline2.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.primary,
+              color: isDarkMode ? AppColors.primaryLight : AppColors.primary,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
           Text(
             description,
-            style: AppTextStyles.bodyLarge,
+            style: AppTextStyles.bodyLarge.copyWith(
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -195,13 +211,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildPageIndicator(bool isActive) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       margin: const EdgeInsets.symmetric(horizontal: 4.0),
       height: 8.0,
       width: isActive ? 24.0 : 8.0,
       decoration: BoxDecoration(
-        color: isActive ? AppColors.primary : Colors.grey.shade300,
+        color: isActive 
+          ? (isDarkMode ? AppColors.primaryLight : AppColors.primary) 
+          : (isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300),
         borderRadius: BorderRadius.circular(4.0),
       ),
     );

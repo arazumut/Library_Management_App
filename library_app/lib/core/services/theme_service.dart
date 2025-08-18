@@ -33,6 +33,7 @@ class ThemeService extends ChangeNotifier {
       case AppConstants.themeModeDark:
         return ThemeMode.dark;
       default:
+        // Sistem temasını kullan
         return ThemeMode.system;
     }
   }

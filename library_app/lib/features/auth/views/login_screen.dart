@@ -107,14 +107,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     width: 100,
                     height: 100,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark 
+                          ? AppColors.cardDark 
+                          : AppColors.primary,
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                        ),
+                      ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.menu_book,
                       size: 60,
-                      color: Colors.white,
+                      color: Theme.of(context).brightness == Brightness.dark 
+                          ? AppColors.primaryLight
+                          : Colors.white,
                     ),
                   ),
                   const SizedBox(height: 24),

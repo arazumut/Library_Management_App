@@ -440,21 +440,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const Divider(height: 0),
           Consumer<ThemeService>(
             builder: (context, themeService, child) {
-              return SwitchListTile(
-                title: const Text('Dark Mode'),
-                subtitle: const Text('Toggle between light and dark theme'),
-                value: themeService.isDarkMode,
-                activeColor: AppColors.primary,
-                onChanged: (bool value) {
-                  if (value) {
-                    themeService.setDarkMode();
-                  } else {
-                    themeService.setLightMode();
-                  }
-                  setState(() {
-                    _userData['preferences']['darkMode'] = value;
-                  });
-                },
+              return Column(
+                children: [
+                  ListTile(
+                    title: const Text('Tema Modu'),
+                    subtitle: const Text('Temayı sistem, karanlık veya açık olarak ayarlayın'),
+                    leading: Icon(
+                      themeService.themeMode == ThemeMode.system
+                          ? Icons.brightness_auto
+                          : themeService.themeMode == ThemeMode.dark
+                              ? Icons.dark_mode
+                              : Icons.light_mode,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.primaryLight
+                          : AppColors.primary,
+                    ),
+                    trailing: DropdownButton<ThemeMode>(
+                      value: themeService.themeMode,
+                      elevation: 4,
+                      underline: Container(),
+                      dropdownColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.cardDark
+                          : AppColors.surface,
+                      onChanged: (ThemeMode? newValue) {
+                        if (newValue != null) {
+                          switch (newValue) {
+                            case ThemeMode.system:
+                              themeService.setSystemMode();
+                              break;
+                            case ThemeMode.light:
+                              themeService.setLightMode();
+                              break;
+                            case ThemeMode.dark:
+                              themeService.setDarkMode();
+                              break;
+                          }
+                          setState(() {
+                            _userData['preferences']['darkMode'] = newValue == ThemeMode.dark;
+                          });
+                        }
+                      },
+                      items: [
+                        DropdownMenuItem(
+                          value: ThemeMode.system,
+                          child: Text('Sistem', style: TextStyle(
+                            color: Theme.of(context).textTheme.bodyLarge?.color
+                          )),
+                        ),
+                        DropdownMenuItem(
+                          value: ThemeMode.light,
+                          child: Text('Açık', style: TextStyle(
+                            color: Theme.of(context).textTheme.bodyLarge?.color
+                          )),
+                        ),
+                        DropdownMenuItem(
+                          value: ThemeMode.dark,
+                          child: Text('Karanlık', style: TextStyle(
+                            color: Theme.of(context).textTheme.bodyLarge?.color
+                          )),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               );
             },
           ),

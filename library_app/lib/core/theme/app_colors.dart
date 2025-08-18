@@ -22,12 +22,18 @@ class AppColors {
   static const Color backgroundDark = Color(0xFF121212);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color surfaceDark = Color(0xFF1E1E1E);
+  static const Color cardDark = Color(0xFF252525);
+  static const Color elevatedDark = Color(0xFF2C2C2C);
   
   // Status Colors
   static const Color success = Color(0xFF4CAF50);
+  static const Color successDark = Color(0xFF2E7D32);
   static const Color error = Color(0xFFE53935);
+  static const Color errorDark = Color(0xFFC62828);
   static const Color warning = Color(0xFFFFB300);
+  static const Color warningDark = Color(0xFFFFA000);
   static const Color info = Color(0xFF2196F3);
+  static const Color infoDark = Color(0xFF1976D2);
   
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
@@ -38,6 +44,12 @@ class AppColors {
   
   static const LinearGradient secondaryGradient = LinearGradient(
     colors: [secondary, secondaryLight],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  
+  static const LinearGradient darkGradient = LinearGradient(
+    colors: [backgroundDark, Color(0xFF1A1A1A)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

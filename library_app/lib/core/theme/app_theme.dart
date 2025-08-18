@@ -146,12 +146,14 @@ class AppTheme {
       onSecondary: AppColors.textWhite,
       secondaryContainer: AppColors.secondary,
       onSecondaryContainer: AppColors.textWhite,
-      tertiary: AppColors.info,
-      error: AppColors.error,
+      tertiary: AppColors.infoDark,
+      error: AppColors.errorDark,
       background: AppColors.backgroundDark,
       onBackground: AppColors.textWhite,
       surface: AppColors.surfaceDark,
       onSurface: AppColors.textWhite,
+      surfaceVariant: AppColors.cardDark,
+      surfaceTint: AppColors.elevatedDark,
     ),
     
     // Text Theme
@@ -170,19 +172,22 @@ class AppTheme {
     
     // AppBar Theme
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.surfaceDark,
+      backgroundColor: AppColors.cardDark,
       foregroundColor: AppColors.textWhite,
       elevation: 0,
       centerTitle: true,
       titleTextStyle: AppTextStyles.headline3.copyWith(
         color: AppColors.textWhite,
       ),
+      iconTheme: IconThemeData(
+        color: AppColors.primaryLight,
+      ),
     ),
     
     // Card Theme
     cardTheme: CardTheme(
-      color: AppColors.surfaceDark,
-      elevation: 2,
+      color: AppColors.cardDark,
+      elevation: 4,
       margin: EdgeInsets.all(8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -199,7 +204,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        elevation: 2,
+        elevation: 4,
       ),
     ),
     
@@ -208,7 +213,7 @@ class AppTheme {
         foregroundColor: AppColors.primaryLight,
         textStyle: AppTextStyles.buttonMedium,
         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        side: BorderSide(color: AppColors.primaryLight, width: 1.5),
+        side: BorderSide(color: AppColors.primaryLight, width: 2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -226,15 +231,15 @@ class AppTheme {
     // Input Theme
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.surfaceDark,
+      fillColor: AppColors.elevatedDark,
       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: AppColors.textSecondary),
+        borderSide: BorderSide(color: AppColors.primary.withOpacity(0.5), width: 1),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: AppColors.textSecondary),
+        borderSide: BorderSide(color: AppColors.primary.withOpacity(0.5), width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
@@ -242,24 +247,43 @@ class AppTheme {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: AppColors.error),
+        borderSide: BorderSide(color: AppColors.errorDark, width: 1.5),
       ),
-      labelStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textWhite),
+      labelStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryLight),
       hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textLight),
-      errorStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+      errorStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.errorDark),
+      prefixIconColor: AppColors.primaryLight,
+      suffixIconColor: AppColors.primaryLight,
     ),
     
     // Bottom Navigation Bar Theme
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: AppColors.surfaceDark,
+      backgroundColor: AppColors.cardDark,
       selectedItemColor: AppColors.primaryLight,
       unselectedItemColor: AppColors.textLight,
-      selectedLabelStyle: AppTextStyles.caption.copyWith(color: AppColors.textWhite),
+      selectedLabelStyle: AppTextStyles.caption.copyWith(
+        color: AppColors.primaryLight,
+        fontWeight: FontWeight.w600
+      ),
       unselectedLabelStyle: AppTextStyles.caption.copyWith(color: AppColors.textLight),
       showSelectedLabels: true,
       showUnselectedLabels: true,
       type: BottomNavigationBarType.fixed,
       elevation: 8,
+    ),
+    
+    // Divider Theme
+    dividerTheme: DividerThemeData(
+      color: AppColors.elevatedDark,
+      thickness: 1,
+      space: 1,
+    ),
+    
+    // Dialog Theme
+    dialogTheme: DialogTheme(
+      backgroundColor: AppColors.cardDark,
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
   );
 }
