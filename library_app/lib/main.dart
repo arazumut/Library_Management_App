@@ -11,47 +11,48 @@ import 'package:library_app/core/services/storage_service.dart';
 import 'package:library_app/core/services/theme_service.dart';
 import 'package:library_app/core/theme/app_theme.dart';
 import 'package:library_app/features/auth/view_models/auth_view_model.dart';
-import 'package:library_app/core/network/api_service.dart';
+import 'package:library_app/core/di/service_locator.dart';
 import 'package:library_app/features/auth/views/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  
+
   // Initialize Hive for local storage
   await Hive.initFlutter();
-  
-  // Initialize storage service
-  final storageService = StorageService();
-  await storageService.init();
-  
-  // Initialize database service
+
+  // Initialize service locator
+  await ServiceLocator.instance.init();
+
+  // Initialize database service (legacy)
   final databaseService = DatabaseService();
   await databaseService.database; // This initializes the database
-  
-  // Initialize API service
-  final apiService = ApiService(storageService);
-  
+
   // Initialize theme service
-  final themeService = ThemeService(storageService);
-  
+  final themeService = ThemeService(ServiceLocator.instance.storageService);
+
   runApp(
     MultiProvider(
       providers: [
-        Provider<StorageService>.value(value: storageService),
+        Provider<StorageService>.value(
+          value: ServiceLocator.instance.storageService,
+        ),
         Provider<DatabaseService>.value(value: databaseService),
-        Provider<ApiService>.value(value: apiService),
+        // Service providers
+        Provider.value(value: ServiceLocator.instance.apiService),
+        Provider.value(value: ServiceLocator.instance.authService),
+        Provider.value(value: ServiceLocator.instance.bookService),
+        Provider.value(value: ServiceLocator.instance.libraryService),
+        Provider.value(value: ServiceLocator.instance.loanService),
         ChangeNotifierProvider<AuthViewModel>(
-          create: (_) => AuthViewModel(apiService, storageService),
+          create: (_) => AuthViewModel(ServiceLocator.instance.authService),
         ),
-        ChangeNotifierProvider<ThemeService>(
-          create: (_) => themeService,
-        ),
+        ChangeNotifierProvider<ThemeService>(create: (_) => themeService),
         // Add more providers here as needed
       ],
       child: const MyApp(),
@@ -68,16 +69,16 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   Locale _locale = const Locale('en', '');
-  
+
   @override
   void initState() {
     super.initState();
     _loadSettings();
   }
-  
+
   Future<void> _loadSettings() async {
-    final storageService = Provider.of<StorageService>(context, listen: false);
-    
+    final storageService = ServiceLocator.instance.storageService;
+
     // Load language setting
     final languageSetting = await storageService.getLanguage();
     if (languageSetting != null) {
@@ -97,7 +98,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     // ThemeService kullanarak tema modunu al
     final themeService = Provider.of<ThemeService>(context);
-    
+
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,

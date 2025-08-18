@@ -4,6 +4,9 @@ import 'package:library_app/core/theme/app_text_styles.dart';
 import 'package:library_app/core/utils/validation_utils.dart';
 import 'package:library_app/core/localization/app_localizations.dart';
 import 'package:library_app/features/books/services/book_service.dart';
+import 'package:library_app/features/books/models/book_model.dart';
+import 'package:library_app/features/books/models/category_model.dart';
+import 'package:provider/provider.dart';
 import 'package:library_app/shared/widgets/custom_text_field.dart';
 import 'package:library_app/shared/widgets/primary_button.dart';
 import 'package:library_app/core/routes/app_routes.dart';
@@ -23,7 +26,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
   final _isbnController = TextEditingController();
   final _pagesController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   DateTime? _publicationDate;
   String? _selectedCategory;
   String? _selectedLanguage;
@@ -102,33 +105,49 @@ class _AddBookScreenState extends State<AddBookScreen> {
             );
           },
         );
-        
+
         await Future.delayed(const Duration(seconds: 2));
-        
-        final bookService = BookService();
-        final book = Book(
+
+        final bookService = Provider.of<BookService>(context, listen: false);
+
+        // Kategori oluştur (basit örnek)
+        final category = CategoryModel(
+          id: 1,
+          name: _selectedCategory ?? 'Diğer',
+          slug: (_selectedCategory ?? 'diğer').toLowerCase(),
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+        final book = BookModel(
+          id: 0, // Yeni kitap için
           title: _titleController.text.trim(),
           author: _authorController.text.trim(),
           publisher: _publisherController.text.trim(),
           isbn: _isbnController.text.trim(),
           pages: int.tryParse(_pagesController.text.trim()) ?? 0,
           language: _selectedLanguage ?? 'Türkçe',
-          category: _selectedCategory ?? 'Diğer',
+          category: category,
           description: _descriptionController.text.trim(),
-          publishDate: _publicationDate,
-          libraryId: 1, // Varsayılan kütüphane ID'si
+          publicationYear: _publicationDate?.year ?? DateTime.now().year,
+          status: 'available',
+          available: true,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         );
-        
+
         final result = await bookService.addBook(book);
-        
+
         if (!mounted) return;
-        
+
         // Yükleme dialogunu kapatma
         Navigator.pop(context);
-        
-        if (result) {
+
+        if (result != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.translate('book_added_successfully'))),
+            SnackBar(
+              content: Text(context.l10n.translate('book_added_successfully')),
+            ),
           );
           AppRoutes.goBack(context);
         } else {
@@ -136,10 +155,13 @@ class _AddBookScreenState extends State<AddBookScreen> {
         }
       } catch (e) {
         if (!mounted) return;
-        
+
         // Eğer yükleme dialogu hala açıksa kapatma
-        Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
-        
+        Navigator.of(
+          context,
+          rootNavigator: true,
+        ).popUntil((route) => route.isFirst);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Kitap eklenirken bir hata oluştu: $e')),
         );
@@ -199,7 +221,11 @@ class _AddBookScreenState extends State<AddBookScreen> {
                 controller: _titleController,
                 label: context.l10n.translate('title'),
                 hint: context.l10n.translate('enter_book_title'),
-                validator: (value) => ValidationUtils.validateRequired(value, context.l10n.translate('title')),
+                validator:
+                    (value) => ValidationUtils.validateRequired(
+                      value,
+                      context.l10n.translate('title'),
+                    ),
                 prefix: const Icon(Icons.book),
                 required: true,
               ),
@@ -209,7 +235,11 @@ class _AddBookScreenState extends State<AddBookScreen> {
                 controller: _authorController,
                 label: context.l10n.translate('author'),
                 hint: context.l10n.translate('enter_author_name'),
-                validator: (value) => ValidationUtils.validateRequired(value, context.l10n.translate('author')),
+                validator:
+                    (value) => ValidationUtils.validateRequired(
+                      value,
+                      context.l10n.translate('author'),
+                    ),
                 prefix: const Icon(Icons.person),
                 required: true,
               ),
@@ -253,12 +283,13 @@ class _AddBookScreenState extends State<AddBookScreen> {
                     borderRadius: BorderRadius.circular(12.0),
                   ),
                 ),
-                items: _categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
+                items:
+                    _categories.map((String category) {
+                      return DropdownMenuItem<String>(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
                 onChanged: (value) {
                   setState(() {
                     _selectedCategory = value;
@@ -277,12 +308,13 @@ class _AddBookScreenState extends State<AddBookScreen> {
                     borderRadius: BorderRadius.circular(12.0),
                   ),
                 ),
-                items: _languages.map((String language) {
-                  return DropdownMenuItem<String>(
-                    value: language,
-                    child: Text(language),
-                  );
-                }).toList(),
+                items:
+                    _languages.map((String language) {
+                      return DropdownMenuItem<String>(
+                        value: language,
+                        child: Text(language),
+                      );
+                    }).toList(),
                 onChanged: (value) {
                   setState(() {
                     _selectedLanguage = value;

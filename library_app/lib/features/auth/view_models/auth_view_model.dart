@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:library_app/core/network/api_service.dart';
-import 'package:library_app/core/services/storage_service.dart';
-import 'package:library_app/features/auth/models/user_model.dart';
+import '../models/user_model.dart';
+import '../services/auth_service.dart';
 
 enum AuthStatus {
   initial,
@@ -12,40 +11,44 @@ enum AuthStatus {
 }
 
 class AuthViewModel extends ChangeNotifier {
-  final ApiService _apiService;
-  final StorageService _storageService;
-  
+  final AuthService _authService;
+
   AuthStatus _status = AuthStatus.initial;
   String? _errorMessage;
   UserModel? _currentUser;
-  
-  AuthViewModel(this._apiService, this._storageService) {
+
+  AuthViewModel(this._authService) {
     _checkAuthStatus();
   }
-  
+
   // Getters
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
   UserModel? get currentUser => _currentUser;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
-  
+
   // Check if user is already authenticated
   Future<void> _checkAuthStatus() async {
-    final token = await _storageService.getToken();
-    
-    if (token != null && token.isNotEmpty) {
-      _status = AuthStatus.authenticated;
-      await _fetchUserProfile();
-    } else {
+    try {
+      final user = await _authService.checkAutoLogin();
+
+      if (user != null) {
+        _status = AuthStatus.authenticated;
+        _currentUser = user;
+      } else {
+        _status = AuthStatus.unauthenticated;
+      }
+    } catch (e) {
       _status = AuthStatus.unauthenticated;
+      _errorMessage = e.toString();
     }
-    
+
     notifyListeners();
   }
-  
-  // Login method
+
+  // Login method - Django API username kullanıyor
   Future<bool> login({
-    required String email,
+    required String username, // Email yerine username
     required String password,
     bool rememberMe = false,
   }) async {
@@ -53,41 +56,15 @@ class AuthViewModel extends ChangeNotifier {
       _status = AuthStatus.authenticating;
       _errorMessage = null;
       notifyListeners();
-      
-      // Simulated API call for login
-      // In a real app, you would use _apiService.post('login', data: {...})
-      await Future.delayed(const Duration(seconds: 2)); // Simulate network delay
-      
-      // Simulating successful login
-      if (email == 'test@example.com' && password == 'password123') {
-        final token = 'simulated_jwt_token_${DateTime.now().millisecondsSinceEpoch}';
-        final refreshToken = 'simulated_refresh_token_${DateTime.now().millisecondsSinceEpoch}';
-        
-        await _storageService.setToken(token);
-        await _storageService.setRefreshToken(refreshToken);
-        
-        // Save user ID for profile fetching
-        await _storageService.setUserId('1');
-        
-        _status = AuthStatus.authenticated;
-        
-        // Create a simulated user
-        _currentUser = UserModel(
-          id: '1',
-          name: 'Test User',
-          email: email,
-          role: 'reader',
-          profileImageUrl: null,
-        );
-        
-        notifyListeners();
-        return true;
-      } else {
-        _status = AuthStatus.error;
-        _errorMessage = 'Invalid email or password';
-        notifyListeners();
-        return false;
-      }
+
+      // Django API'ye gerçek login isteği
+      final user = await _authService.login(username, password);
+
+      _status = AuthStatus.authenticated;
+      _currentUser = user;
+
+      notifyListeners();
+      return true;
     } catch (e) {
       _status = AuthStatus.error;
       _errorMessage = e.toString();
@@ -95,10 +72,12 @@ class AuthViewModel extends ChangeNotifier {
       return false;
     }
   }
-  
-  // Register method
+
+  // Register method - Django API'de register endpoint'i yok, manuel eklenmeli
   Future<bool> register({
-    required String name,
+    required String username,
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
   }) async {
@@ -106,33 +85,12 @@ class AuthViewModel extends ChangeNotifier {
       _status = AuthStatus.authenticating;
       _errorMessage = null;
       notifyListeners();
-      
-      // Simulated API call for registration
-      await Future.delayed(const Duration(seconds: 2)); // Simulate network delay
-      
-      // Simulating successful registration
-      final token = 'simulated_jwt_token_${DateTime.now().millisecondsSinceEpoch}';
-      final refreshToken = 'simulated_refresh_token_${DateTime.now().millisecondsSinceEpoch}';
-      
-      await _storageService.setToken(token);
-      await _storageService.setRefreshToken(refreshToken);
-      
-      // Save user ID for profile fetching
-      await _storageService.setUserId('2');
-      
-      _status = AuthStatus.authenticated;
-      
-      // Create a simulated user
-      _currentUser = UserModel(
-        id: '2',
-        name: name,
-        email: email,
-        role: 'reader',
-        profileImageUrl: null,
+
+      // Django API'de register endpoint'i yoksa manuel kullanıcı eklenmeli
+      // Şimdilik hata döndürelim
+      throw Exception(
+        'Kayıt işlemi henüz desteklenmiyor. Lütfen admin ile iletişime geçin.',
       );
-      
-      notifyListeners();
-      return true;
     } catch (e) {
       _status = AuthStatus.error;
       _errorMessage = e.toString();
@@ -140,97 +98,86 @@ class AuthViewModel extends ChangeNotifier {
       return false;
     }
   }
-  
+
   // Logout method
   Future<void> logout() async {
     try {
-      // Clear stored tokens
-      await _storageService.clearTokens();
-      await _storageService.clearUserData();
-      
+      await _authService.logout();
+
       _status = AuthStatus.unauthenticated;
       _currentUser = null;
+      _errorMessage = null;
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();
     }
   }
-  
-  // Fetch user profile
-  Future<void> _fetchUserProfile() async {
+
+  // Refresh user profile
+  Future<void> refreshUserProfile() async {
     try {
-      final userId = await _storageService.getUserId();
-      
-      if (userId == null) {
-        throw Exception('User ID not found');
-      }
-      
-      // Simulated API call to get user profile
-      // In a real app: final response = await _apiService.get('users/profile');
-      await Future.delayed(const Duration(seconds: 1)); // Simulate network delay
-      
-      // Simulated user data
-      _currentUser = UserModel(
-        id: userId,
-        name: 'Test User',
-        email: 'test@example.com',
-        role: 'reader',
-        profileImageUrl: null,
-      );
-      
+      final user = await _authService.refreshUserData();
+      _currentUser = user;
+      _errorMessage = null;
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();
     }
   }
-  
-  // Password reset request
+
+  // Password reset request - Django API'de şimdilik desteklenmiyor
   Future<bool> requestPasswordReset(String email) async {
     try {
       _errorMessage = null;
       notifyListeners();
-      
-      // Simulated API call for password reset
-      await Future.delayed(const Duration(seconds: 2)); // Simulate network delay
-      
-      // Always return success in demo
-      return true;
+
+      // Django API'de password reset endpoint'i yoksa manuel yapılmalı
+      throw Exception(
+        'Şifre sıfırlama henüz desteklenmiyor. Lütfen admin ile iletişime geçin.',
+      );
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();
       return false;
     }
   }
-  
+
   // Update user profile
   Future<bool> updateProfile({
-    required String name,
+    required String firstName,
+    required String lastName,
+    String? email,
     String? profileImageUrl,
   }) async {
     try {
       _errorMessage = null;
       notifyListeners();
-      
-      // Simulated API call to update profile
-      await Future.delayed(const Duration(seconds: 1)); // Simulate network delay
-      
-      // Update the current user
+
+      // Django API'de profile update endpoint'i eklenene kadar simüle et
       if (_currentUser != null) {
         _currentUser = _currentUser!.copyWith(
-          name: name,
+          firstName: firstName,
+          lastName: lastName,
+          email: email ?? _currentUser!.email,
           profileImageUrl: profileImageUrl ?? _currentUser!.profileImageUrl,
         );
         notifyListeners();
         return true;
       }
-      
+
       return false;
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();
       return false;
     }
+  }
+
+  // Clear error message
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
   }
 }

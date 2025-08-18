@@ -18,14 +18,14 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _rememberMe = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -39,21 +39,21 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-      
+
       // Show loading indicator
       _showLoadingDialog();
-      
+
       final success = await authViewModel.login(
-        email: _emailController.text.trim(),
+        username: _usernameController.text.trim(), // Django username ile login
         password: _passwordController.text,
         rememberMe: _rememberMe,
       );
-      
+
       // Hide loading dialog
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
-      
+
       if (success) {
         if (!mounted) return;
         AppRoutes.navigateToAndRemove(context, AppRoutes.home);
@@ -62,7 +62,8 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              authViewModel.errorMessage ?? context.l10n.translate('login_failed'),
+              authViewModel.errorMessage ??
+                  context.l10n.translate('login_failed'),
             ),
             backgroundColor: AppColors.error,
           ),
@@ -89,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
       },
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,9 +109,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark 
-                          ? AppColors.cardDark 
-                          : AppColors.primary,
+                      color:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.cardDark
+                              : AppColors.primary,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -123,9 +125,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Icon(
                       Icons.menu_book,
                       size: 60,
-                      color: Theme.of(context).brightness == Brightness.dark 
-                          ? AppColors.primaryLight
-                          : Colors.white,
+                      color:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.primaryLight
+                              : Colors.white,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -141,38 +144,48 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 48),
-                  
-                  // Email field
+
+                  // Username field
                   CustomTextField(
-                    controller: _emailController,
-                    label: context.l10n.translate('email'),
-                    hint: context.l10n.translate('enter_email'),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: ValidationUtils.validateEmail,
-                    prefix: const Icon(Icons.email_outlined),
+                    controller: _usernameController,
+                    label: 'Kullanıcı Adı',
+                    hint: 'Kullanıcı adınızı girin',
+                    keyboardType: TextInputType.text,
+                    validator:
+                        (value) => ValidationUtils.validateRequired(
+                          value,
+                          'Kullanıcı Adı',
+                        ),
+                    prefix: const Icon(Icons.person_outline),
                     textInputAction: TextInputAction.next,
                     required: true,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Password field
                   CustomTextField(
                     controller: _passwordController,
                     label: context.l10n.translate('password'),
                     hint: context.l10n.translate('enter_password'),
                     obscureText: _obscurePassword,
-                    validator: (value) => ValidationUtils.validateRequired(value, context.l10n.translate('password')),
+                    validator:
+                        (value) => ValidationUtils.validateRequired(
+                          value,
+                          context.l10n.translate('password'),
+                        ),
                     prefix: const Icon(Icons.lock_outline),
                     suffix: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: _togglePasswordVisibility,
                     ),
                     required: true,
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Remember me and Forgot password
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -196,7 +209,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          AppRoutes.navigateTo(context, AppRoutes.forgotPassword);
+                          AppRoutes.navigateTo(
+                            context,
+                            AppRoutes.forgotPassword,
+                          );
                         },
                         child: Text(
                           context.l10n.translate('forgot_password'),
@@ -209,14 +225,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Login button
                   PrimaryButton(
                     text: context.l10n.translate('login'),
                     onPressed: _login,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Register option
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -239,9 +255,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Social login options (to be implemented)
                   Text(
                     context.l10n.translate('or_sign_in_with'),
@@ -286,7 +302,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-  
+
   Widget _buildSocialLoginButton({
     required IconData icon,
     required VoidCallback onTap,
@@ -301,11 +317,7 @@ class _LoginScreenState extends State<LoginScreen> {
           border: Border.all(color: Colors.grey.shade300),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(
-          icon,
-          size: 32,
-          color: AppColors.textPrimary,
-        ),
+        child: Icon(icon, size: 32, color: AppColors.textPrimary),
       ),
     );
   }

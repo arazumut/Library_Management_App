@@ -6,17 +6,20 @@ class DateTimeUtils {
   static String formatDate(DateTime date, {String pattern = 'dd/MM/yyyy'}) {
     return DateFormat(pattern).format(date);
   }
-  
+
   // Format datetime to specific pattern
-  static String formatDateTime(DateTime date, {String pattern = 'dd/MM/yyyy HH:mm'}) {
+  static String formatDateTime(
+    DateTime date, {
+    String pattern = 'dd/MM/yyyy HH:mm',
+  }) {
     return DateFormat(pattern).format(date);
   }
-  
+
   // Get relative time (e.g. "2 hours ago", "yesterday")
   static String getRelativeTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-    
+
     if (difference.inDays > 365) {
       return "${(difference.inDays / 365).floor()} ${(difference.inDays / 365).floor() == 1 ? 'year' : 'years'} ago";
     } else if (difference.inDays > 30) {
@@ -31,22 +34,25 @@ class DateTimeUtils {
       return "Just now";
     }
   }
-  
+
   // Calculate days remaining
   static int daysRemaining(DateTime endDate) {
     final now = DateTime.now();
     return endDate.difference(now).inDays;
   }
-  
+
   // Parse date from string
-  static DateTime? parseDate(String dateString, {String pattern = 'yyyy-MM-dd'}) {
+  static DateTime? parseDate(
+    String dateString, {
+    String pattern = 'yyyy-MM-dd',
+  }) {
     try {
       return DateFormat(pattern).parse(dateString);
     } catch (e) {
       return null;
     }
   }
-  
+
   // Show date picker with custom theme
   static Future<DateTime?> showCustomDatePicker(
     BuildContext context, {
@@ -61,42 +67,48 @@ class DateTimeUtils {
       lastDate: lastDate ?? DateTime(2100),
     );
   }
-  
+
   // Get first day of week
   static DateTime getFirstDayOfWeek(DateTime date) {
     return date.subtract(Duration(days: date.weekday - 1));
   }
-  
+
   // Get last day of week
   static DateTime getLastDayOfWeek(DateTime date) {
     return date.add(Duration(days: DateTime.daysPerWeek - date.weekday));
   }
-  
+
   // Get first day of month
   static DateTime getFirstDayOfMonth(DateTime date) {
     return DateTime(date.year, date.month, 1);
   }
-  
+
   // Get last day of month
   static DateTime getLastDayOfMonth(DateTime date) {
     return DateTime(date.year, date.month + 1, 0);
   }
-  
+
   // Check if date is today
   static bool isToday(DateTime date) {
     final now = DateTime.now();
-    return date.year == now.year && date.month == now.month && date.day == now.day;
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
-  
+
   // Check if date is yesterday
   static bool isYesterday(DateTime date) {
     final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    return date.year == yesterday.year && date.month == yesterday.month && date.day == yesterday.day;
+    return date.year == yesterday.year &&
+        date.month == yesterday.month &&
+        date.day == yesterday.day;
   }
-  
+
   // Check if date is tomorrow
   static bool isTomorrow(DateTime date) {
     final tomorrow = DateTime.now().add(const Duration(days: 1));
-    return date.year == tomorrow.year && date.month == tomorrow.month && date.day == tomorrow.day;
+    return date.year == tomorrow.year &&
+        date.month == tomorrow.month &&
+        date.day == tomorrow.day;
   }
 }

@@ -1,53 +1,208 @@
-import 'package:library_app/core/services/database_service.dart';
-import 'package:library_app/features/libraries/models/library.dart';
+import '../../../core/network/api_service.dart';
+import '../../../core/network/api_endpoints.dart';
+import '../models/library_model.dart';
+import '../../books/models/book_model.dart';
 
 class LibraryService {
-  final DatabaseService _databaseService = DatabaseService();
+  final ApiService _apiService;
 
-  // Add a new library
-  Future<int> addLibrary(Library library) async {
-    final libraryMap = library.toMap();
-    // Add current timestamp
-    libraryMap['createdAt'] = DateTime.now().toIso8601String();
-    return await _databaseService.insertLibrary(libraryMap);
+  LibraryService({required ApiService apiService}) : _apiService = apiService;
+
+  // Tüm kütüphaneleri getir
+  Future<List<LibraryModel>> getAllLibraries({int? page, int? limit}) async {
+    try {
+      Map<String, dynamic>? queryParams;
+      if (page != null || limit != null) {
+        queryParams = {};
+        if (page != null) queryParams['page'] = page;
+        if (limit != null) queryParams['limit'] = limit;
+      }
+
+      final response = await _apiService.get(
+        ApiEndpoints.libraries,
+        queryParameters: queryParams,
+      );
+
+      List<dynamic> librariesData;
+      if (response is List) {
+        librariesData = response;
+      } else if (response['results'] != null) {
+        librariesData = response['results'];
+      } else {
+        throw Exception('Beklenmeyen API yanıt formatı');
+      }
+
+      return librariesData
+          .map((libraryJson) => LibraryModel.fromJson(libraryJson))
+          .toList();
+    } catch (e) {
+      throw Exception('Kütüphaneler yüklenemedi: ${e.toString()}');
+    }
   }
 
-  // Get all libraries
-  Future<List<Library>> getAllLibraries() async {
-    final librariesMap = await _databaseService.getLibraries();
-    return librariesMap.map((map) => Library.fromMap(map)).toList();
+  // ID'ye göre kütüphane getir
+  Future<LibraryModel> getLibraryById(int id) async {
+    try {
+      final endpoint = ApiEndpoints.replacePathParams(
+        ApiEndpoints.libraryDetail,
+        {'id': id},
+      );
+
+      final response = await _apiService.get(endpoint);
+      return LibraryModel.fromJson(response);
+    } catch (e) {
+      throw Exception('Kütüphane bulunamadı: ${e.toString()}');
+    }
   }
 
-  // Get libraries owned by a specific user
-  Future<List<Library>> getUserLibraries(int userId) async {
-    final librariesMap = await _databaseService.getUserLibraries(userId);
-    return librariesMap.map((map) => Library.fromMap(map)).toList();
+  // Kütüphanedeki kitapları getir
+  Future<List<BookModel>> getLibraryBooks(
+    int libraryId, {
+    int? page,
+    int? limit,
+  }) async {
+    try {
+      final endpoint = ApiEndpoints.replacePathParams(
+        ApiEndpoints.libraryBooks,
+        {'id': libraryId},
+      );
+
+      Map<String, dynamic>? queryParams;
+      if (page != null || limit != null) {
+        queryParams = {};
+        if (page != null) queryParams['page'] = page;
+        if (limit != null) queryParams['limit'] = limit;
+      }
+
+      final response = await _apiService.get(
+        endpoint,
+        queryParameters: queryParams,
+      );
+
+      List<dynamic> booksData;
+      if (response is List) {
+        booksData = response;
+      } else if (response['results'] != null) {
+        booksData = response['results'];
+      } else {
+        throw Exception('Beklenmeyen API yanıt formatı');
+      }
+
+      return booksData.map((bookJson) => BookModel.fromJson(bookJson)).toList();
+    } catch (e) {
+      throw Exception('Kütüphane kitapları yüklenemedi: ${e.toString()}');
+    }
   }
 
-  // Get public libraries
-  Future<List<Library>> getPublicLibraries() async {
-    final librariesMap = await _databaseService.getPublicLibraries();
-    return librariesMap.map((map) => Library.fromMap(map)).toList();
+  // Kütüphane arama
+  Future<List<LibraryModel>> searchLibraries(
+    String query, {
+    int? page,
+    int? limit,
+  }) async {
+    try {
+      Map<String, dynamic> queryParams = {'search': query};
+      if (page != null) queryParams['page'] = page;
+      if (limit != null) queryParams['limit'] = limit;
+
+      final response = await _apiService.get(
+        ApiEndpoints.libraries,
+        queryParameters: queryParams,
+      );
+
+      List<dynamic> librariesData;
+      if (response is List) {
+        librariesData = response;
+      } else if (response['results'] != null) {
+        librariesData = response['results'];
+      } else {
+        throw Exception('Beklenmeyen API yanıt formatı');
+      }
+
+      return librariesData
+          .map((libraryJson) => LibraryModel.fromJson(libraryJson))
+          .toList();
+    } catch (e) {
+      throw Exception('Kütüphane arama başarısız: ${e.toString()}');
+    }
   }
 
-  // Get a single library by ID
-  Future<Library?> getLibrary(int id) async {
-    final libraryMap = await _databaseService.getLibrary(id);
-    return libraryMap != null ? Library.fromMap(libraryMap) : null;
+  // Yeni kütüphane ekle (admin için)
+  Future<LibraryModel> addLibrary(LibraryModel library) async {
+    try {
+      final response = await _apiService.post(
+        ApiEndpoints.libraries,
+        data: library.toJson(),
+      );
+
+      return LibraryModel.fromJson(response);
+    } catch (e) {
+      throw Exception('Kütüphane eklenemedi: ${e.toString()}');
+    }
   }
 
-  // Update a library
-  Future<int> updateLibrary(Library library) async {
-    return await _databaseService.updateLibrary(library.toMap());
+  // Kütüphane güncelle (admin için)
+  Future<LibraryModel> updateLibrary(int id, LibraryModel library) async {
+    try {
+      final endpoint = ApiEndpoints.replacePathParams(
+        ApiEndpoints.libraryDetail,
+        {'id': id},
+      );
+
+      final response = await _apiService.put(endpoint, data: library.toJson());
+
+      return LibraryModel.fromJson(response);
+    } catch (e) {
+      throw Exception('Kütüphane güncellenemedi: ${e.toString()}');
+    }
   }
 
-  // Delete a library
-  Future<int> deleteLibrary(int id) async {
-    return await _databaseService.deleteLibrary(id);
+  // Kütüphane sil (admin için)
+  Future<void> deleteLibrary(int id) async {
+    try {
+      final endpoint = ApiEndpoints.replacePathParams(
+        ApiEndpoints.libraryDetail,
+        {'id': id},
+      );
+
+      await _apiService.delete(endpoint);
+    } catch (e) {
+      throw Exception('Kütüphane silinemedi: ${e.toString()}');
+    }
   }
 
-  // Get books in a specific library
-  Future<List<Map<String, dynamic>>> getLibraryBooks(int libraryId) async {
-    return await _databaseService.getLibraryBooks(libraryId);
+  // Yakınımdaki kütüphaneler (koordinata göre)
+  Future<List<LibraryModel>> getNearbyLibraries(
+    double latitude,
+    double longitude, {
+    double? radius,
+  }) async {
+    try {
+      Map<String, dynamic> queryParams = {
+        'latitude': latitude,
+        'longitude': longitude,
+      };
+      if (radius != null) queryParams['radius'] = radius;
+
+      final response = await _apiService.get(
+        ApiEndpoints.libraries,
+        queryParameters: queryParams,
+      );
+
+      List<dynamic> librariesData;
+      if (response is List) {
+        librariesData = response;
+      } else if (response['results'] != null) {
+        librariesData = response['results'];
+      } else {
+        throw Exception('Beklenmeyen API yanıt formatı');
+      }
+
+      return librariesData
+          .map((libraryJson) => LibraryModel.fromJson(libraryJson))
+          .toList();
+    } catch (e) {
+      throw Exception('Yakın kütüphaneler bulunamadı: ${e.toString()}');
+    }
   }
 }

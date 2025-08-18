@@ -6,8 +6,9 @@ import 'package:library_app/core/localization/app_localizations.dart';
 import 'package:library_app/shared/widgets/custom_text_field.dart';
 import 'package:library_app/shared/widgets/primary_button.dart';
 import 'package:library_app/core/routes/app_routes.dart';
-import 'package:library_app/features/libraries/models/library.dart';
+import 'package:library_app/features/libraries/models/library_model.dart';
 import 'package:library_app/features/libraries/services/library_service.dart';
+import 'package:provider/provider.dart';
 
 class AddLibraryScreen extends StatefulWidget {
   const AddLibraryScreen({Key? key}) : super(key: key);
@@ -24,13 +25,16 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
   final _emailController = TextEditingController();
   final _websiteController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   // Kütüphane Açılış/Kapanış Saatleri
   TimeOfDay _openingTime = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _closingTime = const TimeOfDay(hour: 18, minute: 0);
-  
+
   // Açık Günler
-  List<bool> _openDays = List.generate(7, (index) => index < 5); // Pazartesi-Cuma açık varsayılan olarak
+  List<bool> _openDays = List.generate(
+    7,
+    (index) => index < 5,
+  ); // Pazartesi-Cuma açık varsayılan olarak
 
   @override
   void dispose() {
@@ -71,34 +75,47 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       try {
         // Create a Library object from the form data
-        final library = Library(
+        final library = LibraryModel(
+          id: 0, // Yeni kütüphane için
           name: _nameController.text,
           address: _addressController.text,
-          phone: _phoneController.text.isNotEmpty ? _phoneController.text : null,
-          email: _emailController.text.isNotEmpty ? _emailController.text : null,
-          website: _websiteController.text.isNotEmpty ? _websiteController.text : null,
-          description: _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
-          openingTime: _openingTime,
-          closingTime: _closingTime,
-          openDays: _openDays,
-          userId: 1, // Current user ID - this would typically come from authentication
-          isPublic: true, // Default to public
+          phone:
+              _phoneController.text.isNotEmpty ? _phoneController.text : null,
+          email:
+              _emailController.text.isNotEmpty ? _emailController.text : null,
+          website:
+              _websiteController.text.isNotEmpty
+                  ? _websiteController.text
+                  : null,
+          description:
+              _descriptionController.text.isNotEmpty
+                  ? _descriptionController.text
+                  : null,
+          openingHours:
+              '${_openingTime.format(context)} - ${_closingTime.format(context)}',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         );
-        
+
         // Save the library to the database
-        final libraryService = LibraryService();
+        final libraryService = Provider.of<LibraryService>(
+          context,
+          listen: false,
+        );
         await libraryService.addLibrary(library);
-        
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.translate('library_added_successfully'))),
+          SnackBar(
+            content: Text(context.l10n.translate('library_added_successfully')),
+          ),
         );
         AppRoutes.goBack(context);
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -171,7 +188,11 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
                 controller: _nameController,
                 label: 'Kütüphane Adı',
                 hint: 'Kütüphane adını girin',
-                validator: (value) => ValidationUtils.validateRequired(value, 'Kütüphane Adı'),
+                validator:
+                    (value) => ValidationUtils.validateRequired(
+                      value,
+                      'Kütüphane Adı',
+                    ),
                 prefix: const Icon(Icons.account_balance),
                 required: true,
               ),
@@ -181,7 +202,8 @@ class _AddLibraryScreenState extends State<AddLibraryScreen> {
                 controller: _addressController,
                 label: 'Adres',
                 hint: 'Kütüphane adresini girin',
-                validator: (value) => ValidationUtils.validateRequired(value, 'Adres'),
+                validator:
+                    (value) => ValidationUtils.validateRequired(value, 'Adres'),
                 prefix: const Icon(Icons.location_on),
                 maxLines: 3,
                 required: true,
